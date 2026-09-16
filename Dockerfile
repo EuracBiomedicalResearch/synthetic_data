@@ -96,14 +96,16 @@ ENV MAPTHIN_PATH "$TOOLS_DIR/mapthin"
 # Add tools to PATH
 ENV PATH $PLINK_PATH:$PLINK2_PATH:$KING_PATH:$VCFTOOLS_PATH/bin:$BCFTOOLS_PATH/bin:$MAPTHIN_PATH:$PATH
 
-# Setup compression tools
+# Setup compression tools & fonts
 RUN set -eux; \
     apt-get update; \
 	apt-get install -y --no-install-recommends \
         unzip \
         git \
         autoconf automake build-essential pkg-config zlib1g-dev cmake \
-        libbz2-dev liblzma-dev
+        libbz2-dev liblzma-dev \
+		fonts-dejavu-core fonts-liberation libpango1.0-0 \
+		fontconfig
 
 RUN set -eux; \
 # Setup tools directory
@@ -113,10 +115,24 @@ RUN set -eux; \
     echo "Setting up Plink 1.9"; \
     curl -fL -o $DOWNLOAD_DIR/plink1.zip "http://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_20201019.zip"; \
     unzip $DOWNLOAD_DIR/plink1.zip -d "$PLINK_PATH"; \
-# Setup Plink2
-    echo "Setting up Plink 2.0"; \
-    curl -fL -o $DOWNLOAD_DIR/plink2.zip "https://s3.amazonaws.com/plink2-assets/plink2_linux_avx2_latest.zip"; \
-    unzip $DOWNLOAD_DIR/plink2.zip -d "$PLINK2_PATH"; \
+# Setup Plink2: AVX2 + fallback x86_64
+	echo "Setting up Plink 2.0 AVX2 and x86_64 fallback"; \
+	curl -fL -o $DOWNLOAD_DIR/plink2_avx2.zip "https://s3.amazonaws.com/plink2-assets/plink2_linux_avx2_latest.zip"; \
+	mkdir -p "$TOOLS_DIR/plink2_avx2"; \
+	unzip $DOWNLOAD_DIR/plink2_avx2.zip -d "$TOOLS_DIR/plink2_avx2"; \
+	curl -fL -o $DOWNLOAD_DIR/plink2_x86_64.zip "https://s3.amazonaws.com/plink2-assets/plink2_linux_x86_64_latest.zip"; \
+	mkdir -p "$TOOLS_DIR/plink2_x86_64"; \
+	unzip $DOWNLOAD_DIR/plink2_x86_64.zip -d "$TOOLS_DIR/plink2_x86_64"; \
+	mkdir -p "$PLINK2_PATH"; \
+	printf '%s\n' \
+		'#!/bin/bash' \
+		'if grep -qw avx2 /proc/cpuinfo; then' \
+		'    exec /opt/tools/plink2_avx2/plink2 "$@"' \
+		'else' \
+		'    exec /opt/tools/plink2_x86_64/plink2 "$@"' \
+		'fi' \
+		> "$PLINK2_PATH/plink2"; \
+	chmod +x "$PLINK2_PATH/plink2"; \
 # Setup KING
     echo "Setting up KING"; \
     curl -fL -o $DOWNLOAD_DIR/king.tar.gz "https://www.kingrelatedness.com/Linux-king.tar.gz"; \
@@ -182,6 +198,7 @@ RUN set -eux; \
     rm -rf $DOWNLOAD_DIR
 
 
+
 # ************************* Add INTERVENE scripts *********************************
 WORKDIR /opt/intervene
 ENV SCRIPT_DIR "/opt/intervene/scripts"
@@ -199,8 +216,9 @@ RUN ln -s $DATA_DIR .
 
 # Install Julia packages
 RUN set -eux; \
-	julia --project=$SCRIPT_DIR -e \
-	"using Pkg; Pkg.instantiate(); using Conda; Conda.add(\"bed-reader\")"
+    julia --project=$SCRIPT_DIR -e \
+    "using Pkg; Pkg.instantiate()"; \
+    julia -e "using Conda; Conda.add(\"python=3.11\", channel=\"conda-forge\"); Conda.add(\"bed-reader\", channel=\"conda-forge\")"
 
 # Install dependencies for phenotype generation
 RUN set -eux; \
@@ -216,6 +234,30 @@ ENV PATH $PHENO_BIN_PATH:$PATH
 RUN set -eux; \
     cd algorithms/phenotype; \
 	gcc Main.c Support.c -o $PHENO_BIN_PATH/phenoalg -L. -lm -lgsl -fPIC -lblas -lplinkio
+
+
+# ************************* Python for MAI (evaluation) *************************
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        python3 \
+        python3-pip \
+		python3-dev \
+    ; \
+    rm -rf /var/lib/apt/lists/*
+
+# Python dependencies for MAI
+RUN set -eux; \
+    pip3 install --no-cache-dir \
+        numpy \
+        scipy \
+        pandas \
+        scikit-learn \
+        imbalanced-learn \
+        matplotlib \
+        pysnptools \
+        seaborn \
+        bed-reader
 
 # Setup path for commands
 ENV PATH "$SCRIPT_DIR/commands":$PATH

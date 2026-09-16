@@ -1,0 +1,6 @@
+#!/bin/sh
+# Convert plink files to vcf format
+CURR_DIR=`pwd`
+cd $SCRIPT_DIR
+julia run_program.jl --convert --config "$@"
+cd $CURR_DIR

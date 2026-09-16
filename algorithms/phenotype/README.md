@@ -92,25 +92,32 @@ _For each trait_, it outputs two files, ```.pheno``` includes the genetic effect
 
 As showed above, user can specified a list of causal variants for each trait, or trait polygenicity parameter to control the amount of variants being causal. In both cases, effect sizes of causal variants will be drawn randomly from a distribution. Alternatively, user can also specify the effect of each causal variant in the list. In this case, ```CausalList``` for each trait should contain 2 column: variant ID, and effect size in terms of beta for homo and homozygous genotypes, seperated by comma. Below is an example
 ```
-rs56175625  0.5,0.25
-rs57804877  0.2,0.15
-rs201404203 0.3,0
+chr20:45490942:C:T  0.5,0.25
+chr20:52288238:C:T  0.5,0.25
+chr20:61595535:T:C  0.5,0.25
 ```
 The first row means causal variant ```rs56175625``` has effect 0.5 for genotype AA and effect 0.25 for Aa, were A is the risk allele. 
 For user-sepcified effects to be applied, please make sure to add below in the parameter file:
 ```
 CausalEffect  T
 ```
-Otherwise the effect size column in the ```CausalList``` will be ignored.
+Otherwise the effect size column in the ```CausalList``` will be ignored. 
+
+We created a script, which creates such a CausalList for a given GWASCatalog Association file, which can be downloaded directly on the website. To run the the program, use the following command: 
+```bash
+python3 create_causalList.py --input <file-from-GWASCatalog.tsv> --output <path/to/output/CausalList>
+```
+Note that this script uses the Ensembl-Api, so it might take some time if you process huge files. 
+
 **Note when user-sepcified effects are applied, trait and population genetic correlation will be disabled.** There will not be any population specific effect under user-sepcified effect option. 
 
 ## Adding interaction terms
 
 You can now add interaction effects to the phenotype using the ```Interaction``` parameter. Similar to ```CausalList```, it takes prefix for lists of predefined interaction items to be applied on the phenotype. The list should contrain three columns: interaction term1, term2 and the effect size. An example looks like below:
 ```
-rs202076079	covar1	0.1
+chr20:45490942:C:T 	covar1	0.1
 covar1	covar2	0.3
-rs16831418	rs115414386	0.2
+chr20:61595535:T:C chr20:52288238:C:T  0.2
 ```
 Row 1 means that the genotype of variant rs202076079 x the first covariate in the ```SampleList``` (first column proceeding sample ID) has effect of 0.1 on the phenotype. Note the interaction can include SNP x SNP interaction (Epistasis effect), SNP x covariate effect or covariate x covariate effect. Covariate terms should be specified as ```covar```n, where n is the covariate index as ordered in the ```SampleList```.
 **Same as ```CausalList```, for each trait, the interation item file should be names as**  ```prefix```**n, where n is the trait index.**

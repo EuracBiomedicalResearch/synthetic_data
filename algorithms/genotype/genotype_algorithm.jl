@@ -1,4 +1,6 @@
 using Random, Distributions, DataFrames, CSV, StatsBase, ProgressMeter
+using Base.Threads
+using Statistics
 
 include("../../utils/parameter_parsing.jl")
 include("write_output.jl")
@@ -53,37 +55,51 @@ The reference table has the following columns:
 Note that the start and end variant positions are included in the segment
 """
 function create_reference_table(metadata, start_haplotype, end_haplotype, batchsize)
-    total_num_hap = 2*batchsize
-    # to multi-thread the operation we create a dataframe for each haplotype, then concat these together
-    ref_df_samples = Vector{DataFrame}(undef, total_num_hap)
-    p = Progress(total_num_hap)
+    num_haps = end_haplotype - start_haplotype + 1
+    expected = 2 * batchsize
+    @assert num_haps == expected "Haplotype count mismatch: expected $expected, got $num_haps"
+    
+    ref_df_samples = Vector{DataFrame}(undef, num_haps)
+    
     Threads.@threads for hap in start_haplotype:end_haplotype
+        # Create thread-local RNG
+        rng = Random.default_rng()
+        
         happop = metadata.population_groups[hap]
         pos = 1
-        # create segments until all variant positions are filled
-        ref_df_hap = DataFrame(H=Int[], I=String[], S=Int[], E=Int[], P=String[], Q=String[], T=Float64[])
+        ref_df_hap = DataFrame(H=Int[], I=String[], S=Int[], E=Int[],
+                               P=String[], Q=String[], T=Float64[])
+        
         while pos <= metadata.nvariants
-            # sample a population group for the segment
-            segpop = sample(collect(keys(metadata.population_weights[happop])), Weights(collect(values(metadata.population_weights[happop]))))
-            # sample the segment distance
+            weights_dict = metadata.population_weights[happop]
+            @assert all(values(weights_dict) .>= 0) "Negative weights detected"
+            
+            segpop = sample(rng, collect(keys(weights_dict)), 
+                           Weights(collect(values(weights_dict))))
+            
             T = sample_T(metadata.population_Ns[segpop], metadata.population_Nes[segpop])
             L = sample_L(T, metadata.population_rhos[segpop])
-            # sample the haplotype to be copied
-            seghap = rand(metadata.haplotypes[segpop])
-            # update the start and end (variant) positions of the segment
+            
+            # Use thread-local RNG here too
+            seghap = rand(rng, metadata.haplotypes[segpop])
+            
             start_pos = pos
-            end_pos = min(update_variant_position(pos, L, metadata.genetic_distances, metadata.nvariants), metadata.nvariants)
-            push!(ref_df_hap, [hap, seghap, start_pos, end_pos, happop, segpop, T])
-            pos = end_pos+1
+            end_pos = min(update_variant_position(pos, L, metadata.genetic_distances, metadata.nvariants),
+                          metadata.nvariants)
+            
+            push!(ref_df_hap, (H=hap, I=seghap, S=start_pos, E=end_pos,
+                               P=happop, Q=segpop, T=T))
+            pos = end_pos + 1
         end
-        ref_df_samples[hap-start_haplotype+1] = ref_df_hap
-        next!(p)
+        
+        idx = hap - start_haplotype + 1
+        @assert 1 <= idx <= num_haps
+        ref_df_samples[idx] = ref_df_hap
     end
-    # concat the arrays of dataframes
+    
     ref_df = vcat(ref_df_samples...)
     return ref_df
 end
-
 
 """Adjusts the batch size if not a divisor of the number of samples
 """

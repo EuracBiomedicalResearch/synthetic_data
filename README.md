@@ -5,7 +5,7 @@ HAPNEST enables you to
 - Easily analyse data quality with an extensive workflow for evaluating synthetic data reliability and generalisability
 - Examine the posterior distributions of model parameters to aid with model selection
 
-We have used HAPNEST to simulate genetics data and corresponding phenotypes for 1 million individuals for 6 superpopulations and over 6.8 million variants in less than 12 hours (32GB RAM, 8 threads per machine). We have made this synthetic dataset (and a smaller example dataset) publicly available for download at https://www.ebi.ac.uk/biostudies/studies/S-BSST936.
+We have used HAPNEST to simulate genetics data and corresponding phenotypes for 5 different populations with 10 continoius traits for a sample size between 10,000 and 10,000,000.
 
 ![architecture diagram](diagram.jpg)
 
@@ -39,7 +39,7 @@ Steps 1-4 only need to be run once the first time you install HAPNEST. Step 5 de
 1. Download the Singularity container by running the following command:
 
 ```
-singularity pull docker://sophiewharrie/intervene-synthetic-data
+singularity pull docker://benonsen/synthetic-genetic-data
 ```
 
 2. Setup the directory structure illustrated below with the container you just downloaded and a copy of the `config.yaml` file from this repository:
@@ -49,32 +49,32 @@ singularity pull docker://sophiewharrie/intervene-synthetic-data
 ├── data
 |   └── config.yaml
 └── containers
-    └── intervene-synthetic-data_latest.sif
+    └── synthetic-genetic-data_latest.sif
 ```
 
 3. Initialise the software dependencies from the root directory you set up in the previous step:
 
 ```
-singularity exec --bind data/:/data/ containers/intervene-synthetic-data_latest.sif init
+singularity exec --bind data/:/data/ containers/synthetic-genetic-data_latest.sif init
 ```
 
 4. Fetch the reference dataset:
 
 ```
-singularity exec --bind data/:/data/ containers/intervene-synthetic-data_latest.sif fetch
+singularity exec --bind data/:/data/ containers/synthetic-genetic-data_latest.sif fetch
 ```
 
 5. Generate synthetic genotypes and phenotypes, and (optionally) evaluate the data quality:
 
 Synthetic data generation:
 ```
-singularity exec --bind data/:/data/ containers/intervene-synthetic-data_latest.sif generate_geno 1 data/config.yaml
-singularity exec --bind data/:/data/ containers/intervene-synthetic-data_latest.sif generate_pheno data/config.yaml
+singularity exec --bind data/:/data/ containers/synthetic-genetic-data_latest.sif generate_geno 1 data/config.yaml
+singularity exec --bind data/:/data/ containers/synthetic-genetic-data_latest.sif generate_pheno data/config.yaml
 ```
 
 Evaluation (optional - please note this can take a while to execute for larger synthetic datasets):
 ```
-singularity exec --bind data/:/data/ containers/intervene-synthetic-data_latest.sif validate data/config.yaml
+singularity exec --bind data/:/data/ containers/synthetic-genetic-data_latest.sif validate data/config.yaml
 ```
 
 
@@ -86,12 +86,12 @@ This quickstart tutorial will show you the simplest approach for generating and 
 
 For ease of portability and reproducibility, we've made this software available as Docker and Singularity containers. Containerisation streamlines software dependency management by creating a standardised environment, to make it easier for you to get started with generating synthetic datasets.  
 
-The HAPNEST container is available at the link https://hub.docker.com/r/sophiewharrie/intervene-synthetic-data. The instructions provided in this documentation use the Singularity container, but can be adapted to work directly with the Docker container.
+The HAPNEST container is available at the link https://hub.docker.com/r/benonsen/synthetic-genetic-data/. The instructions provided in this documentation use the Singularity container, but can be adapted to work directly with the Docker container.
 
 Download the Singularity container by running the following command:
 
 ```
-singularity pull docker://sophiewharrie/intervene-synthetic-data
+singularity pull docker://benonsen/synthetic-genetic-data
 ```
 
 Alternatively, you can run this software without a container by manually installing the software dependencies. If you prefer this approach, you can view the list of required dependencies in the `Dockerfile` of this repository. 
@@ -104,7 +104,7 @@ Alternatively, you can run this software without a container by manually install
 ├── data
 |   └── config.yaml
 └── containers
-    └── intervene-synthetic-data_latest.sif
+    └── synthetic-genetic-data_latest.sif
 ```
 
 If your container version has a different name you should update this in any subsequent commands. The `config.yaml` file contains the parameter values used for synthetic data generation. In this tutorial we will use the default configuration.
@@ -112,7 +112,7 @@ If your container version has a different name you should update this in any sub
 3. **From the root directory you setup in the previous step, run the `init` command to complete the setup of software dependencies:**
 
 ```
-singularity exec --bind data/:/data/ containers/intervene-synthetic-data_latest.sif init
+singularity exec --bind data/:/data/ containers/synthetic-genetic-data_latest.sif init
 ```
 
 This command binds the `data` directory you created in the previous step, which is used by HAPNEST to access input reference files and store output data files.
@@ -120,13 +120,13 @@ This command binds the `data` directory you created in the previous step, which 
 By default the above command will store Julia package files in the `~/.julia` directory. If you experience an error related to updating the registry at `~/.julia/...` you may need to give an explicit [depot path](https://docs.julialang.org/en/v1/manual/environment-variables/#JULIA_DEPOT_PATH) by adding `--env JULIA_DEPOT_PATH={path-to-your-preffered-location}` to the previous command **and all subsequent commands**. For example:
 
 ```
-singularity exec --bind data/:/data/ --env JULIA_DEPOT_PATH=/data/.julia containers/intervene-synthetic-data_latest.sif init
+singularity exec --bind data/:/data/ --env JULIA_DEPOT_PATH=/data/.julia containers/synthetic-genetic-data_latest.sif init
 ```
 
 4. **The first time using the container, you need to fetch the reference dataset using the `fetch` command:**
 
 ```
-singularity exec --bind data/:/data/ containers/intervene-synthetic-data_latest.sif fetch
+singularity exec --bind data/:/data/ containers/synthetic-genetic-data_latest.sif fetch
 ```
 
 This will download the reference files used as input to the synthetic data generation program to the `data/inputs/processed` directory. See [preprocessing/README.md](preprocessing/README.md) if you would like to know more about how this data was created and for information about creating your own reference datasets.
@@ -134,8 +134,8 @@ This will download the reference files used as input to the synthetic data gener
 5. **Now generate a synthetic dataset using the `generate_geno` and `generate_pheno` commands:**
 
 ```
-singularity exec --bind data/:/data/ containers/intervene-synthetic-data_latest.sif generate_geno 1 data/config.yaml
-singularity exec --bind data/:/data/ containers/intervene-synthetic-data_latest.sif generate_pheno data/config.yaml
+singularity exec --bind data/:/data/ containers/synthetic-genetic-data_latest.sif generate_geno 1 data/config.yaml
+singularity exec --bind data/:/data/ containers/synthetic-genetic-data_latest.sif generate_pheno data/config.yaml
 ```
 
 The number given after `generate_geno` in the first command is the number of computing threads you want the software to use. We recommend increasing this to a higher value for faster synthetic data generation. Running the above commands should generate a small synthetic dataset in the `data/outputs/test` directory. 
@@ -145,10 +145,17 @@ Now it would be useful to evaluate the quality of this data.
 6. **Evaluate synthetic data quality using the `validate` command (optional - please note this can take a while to execute for larger synthetic datasets):**
 
 ```
-singularity exec --bind data/:/data/ containers/intervene-synthetic-data_latest.sif validate data/config.yaml
+singularity exec --bind data/:/data/ containers/synthetic-genetic-data_latest.sif validate data/config.yaml
 ```
 
 This will store visualisations in the `data/outputs/test/evaluation` directory and print results for quantitative metrics. See our manuscript for details about the evaluation workflow.
+
+7. **Convert the generated genotypes from the PLINK format to the VCF format using the `convert` command:**
+
+```
+singularity exec --bind data/:/data/ containers/synthetic-genetic-data_latest.sif convert data/config.yaml
+```
+This will convert the generated PLINK filese to the VCF format for the specified chromosome(s) in the config file.
 
 Now that you understand the basics, you can read about [how to customise your synthetic datasets](#customising-your-synthetic-datasets). You may also be interested in [how to generate very large datasets](#large-scale-synthetic-data-generation).
 
@@ -282,9 +289,9 @@ Parameters for phenotype data generation:
 | b | Float | Suggested value is -1 |
 | c | Float | Suggested value is 0.5 |
 | nComponent | Integer | Number of Gaussian mixture components |
-| ProportionGeno | Comma-separated list of floats | The observed causal SNP heritability in each population, each trait. Flatten nPop * nTrait matrix, entries separated by comma |
-| ProportionCovar | Comma-separated list of floats| The observed proportion of variance contributed by the covariate (input in SampleList file) in each population, each trait. Flatten nPop * nTrait matrix, entries separated by comma.|
-| Prevalence | Comma-separated list of floats | Disease prevalence in each population, each trait. Flatten nPop * nTrait matrix, entries separated by comma. If prevalence is specified, output will include a column for binary case/control statues.|
+| ProportionGeno | Comma-separated list of floats | The observed causal SNP heritability in each population, each trait. Flatten **nPop * nTrait matrix**, entries separated by comma |
+| ProportionCovar | Comma-separated list of floats| The observed proportion of variance contributed by the covariate (input in SampleList file) in each population, each trait. Flatten **nPop * nTrait matrix**, entries separated by comma.|
+| Prevalence | Comma-separated list of floats | Disease prevalence in each population, each trait. Flatten **nPop * nTrait matrix**, entries separated by comma. If prevalence is specified, output will include a column for binary case/control statues.|
 | TraitCorr | Comma-separated list of floats | A flattened correlation matrix for traits genetic correlation (symmetric positive definite). nTrait x nTrait entries separated by comma. |
 | PopulationCorr | Comma-separated list of floats |A flattened correlation matrix for population genetic correlation (symmetric positive definite). nPop x nPop entries separated by comma. |
 | CompWeight | Comma-separated list of floats | Gaussian mixture component weights |
@@ -302,7 +309,7 @@ The evaluation workflow computes a set of visualisations and quantitative metric
 The evaluation workflow can be run using the `validate` command, e.g. 
 
 ```
-singularity exec --bind data/:/data/ containers/intervene-synthetic-data_latest.sif validate data/config.yaml
+singularity exec --bind data/:/data/ containers/synthetic-genetic-data_latest.sif validate data/config.yaml
 ```
 
 Note that you can use the evaluation workflow with any PLINK-formatted synthetic dataset, i.e. it doesn't have to be generated using this tool. However, please note that the code assumes that the IDs in the .fam file begin with the prefix "syn".
@@ -318,8 +325,9 @@ You can enable/disable different types of metrics by setting `true`/`false` valu
 | `maf` | `true`/`false` | Minor allele frequency divergences | :heavy_check_mark: | |
 | `pca` | `true`/`false` | Principal components analysis of population structure | :heavy_check_mark: | |
 | `gwas` | `true`/`false` | Run GWAS and generate manhattan and qqplot | :heavy_check_mark: | :heavy_check_mark: |
+| `mia` | `true`/`false` | Run a Membership Inference Attack (mia) and generate a confusion matrix, precision-recall plot and a ROC curve. See the [evaluation README](evaluation/README.md#parameters-for-mia) for  a detailed parameter description. | :heavy_check_mark: | |
 
-The evaluation metrics are printed to standard output and plots are stored at `output_dir/evaluation`, where `output_dir` is specified in the `config.yaml` file. 
+The evaluation metrics are printed to standard output and plots are stored at `output_dir/evaluation`, where `output_dir` is specified in the `config.yaml` file. Note that if you run `gwas` evaluation on all chromosomes, it will create one plot with all the chromosomes, instead of creating one plot for each chromosoe and only displaying that chromosome.  
 
 ## Optimising model parameters using ABC
 
@@ -401,7 +409,7 @@ optimisation:
 4. **Run a simulation to generate samples of parameters from the prior distributions and simulate data from the model using those parameters:** The `optimise` command runs the ABC simulation and calculates the summary statistics for the simulated data and compares them with the summary statistics for the reference data using a distance measure. The idea is that parameters are accepted if the distance is below the predefined `threshold` and rejected otherwise, where the accepted parameters form an approximation of the posterior distribution.
 
 ```
-singularity exec --bind data/:/data/ containers/intervene-synthetic-data_latest.sif optimise data/config.yaml
+singularity exec --bind data/:/data/ containers/synthetic-genetic-data_latest.sif optimise data/config.yaml
 ```
 
 5. **Analyse and use the results for generating synthetic datasets:** The optimisation pipeline creates two outputs in the `optimisation` directory: (1) `{prefix}_sim.csv`, the raw table of accepted parameter values and their distance measure `d`; and (2) `{prefix}_sim.png`, a plot of the resulting posterior distributions for each parameter. In the Jupyter notebook `optimisation/example/analysis.ipynb` we provide example code for conducting further analysis of these results. To summarize:
@@ -454,7 +462,7 @@ cp ${CONFIG}.yaml ${CONFIG}$n.yaml
 sed -i 's/${chr}'"/$n/g" ${CONFIG}$n.yaml
 
 # generate data for each chromosome
-singularity exec --bind data/:/data/ containers/intervene-synthetic-data_latest.sif generate_geno 8 ${CONFIG}$n.yaml
+singularity exec --bind data/:/data/ containers/synthetic-genetic-data_latest.sif generate_geno 8 ${CONFIG}$n.yaml
 ```
 
 3. The script below shows how to generate synthetic phenotypes, using the genotypes generated in the previous step as input. This shouldn't be split into multiple jobs because the phenotype generation algorithm needs to sum genetic effects across all chromosomes included in the dataset.
@@ -469,5 +477,5 @@ cp ${CONFIG}.yaml ${CONFIG}_pheno$n.yaml
 sed -i 's/${chr}'"/all/g" ${CONFIG}_pheno$n.yaml
 
 # generate phenotype data
-singularity exec --bind data/:/data/ containers/intervene-synthetic-data_latest.sif generate_pheno ${CONFIG}_pheno$n.yaml
+singularity exec --bind data/:/data/ containers/synthetic-genetic-data_latest.sif generate_pheno ${CONFIG}_pheno$n.yaml
 ```

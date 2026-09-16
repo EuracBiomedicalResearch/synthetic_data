@@ -21,13 +21,12 @@ function pca_alignment(real_data_prefix, synt_data_prefix)
     df_pc_synt = CSV.File(synt_data_prefix * ".eigenvec.allele", normalizenames=true) |> DataFrame
 
     ## Load variance contribution of PCs
-    pc_real_eigval = readdlm(real_data_prefix * ".eigenval"; header=false)
-    pc_synt_eigval = readdlm(synt_data_prefix * ".eigenval"; header=false) 
+    pc_real_eigval = Matrix(CSV.read(real_data_prefix * ".eigenval", DataFrame; header=false))
+    pc_synt_eigval = Matrix(CSV.read(synt_data_prefix * ".eigenval", DataFrame; header=false))
 
-    ##
-    # Extract principal directions
-    pc_real = Matrix(df_pc_real[:, 6:end])
-    pc_synt = Matrix(df_pc_synt[:, 6:end])
+    ## Extract principal directions (skip the A1 allele column)
+    pc_real = Matrix(df_pc_real[:, 7:end])  # Changed from 6:end to 7:end
+    pc_synt = Matrix(df_pc_synt[:, 7:end])  # Changed from 6:end to 7:end
 
     # Normalize the vectors to account for sample difference
     pc_real_norm = pc_real ./ .√(sum(pc_real .^ 2, dims=1))
@@ -80,5 +79,9 @@ end
 function run_pca(real_data_prefix_pca, synt_data_prefix_pca, pcaproj_file, real_data_popfile, synt_data_popfile, eval_dir)
     @info "Running PCA Evaluations"
     pca_alignment(real_data_prefix_pca, synt_data_prefix_pca)
-    plot_pca_proj(pcaproj_file, eval_dir)
+    if pcaproj_file === nothing
+        @warn "pcaproj_file not available (king was skipped or failed): skipping PCA projection plot."
+    else
+        plot_pca_proj(pcaproj_file, eval_dir)
+    end
 end

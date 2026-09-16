@@ -126,6 +126,14 @@ evaluation:
     maf: true # minor allele frequency divergences
     pca: true # principal components analysis
     gwas: false # GWAS, manhattan plot and qqplot
+    mia: true # membership inference attack
+
+  # Settings for MAI metric
+  mia:
+    balancing: oversample # one of: none, undersample, oversample
+    pca_components: 20
+    train_fraction: 0.7
+    shuffle: true
 
 
 ####################################
