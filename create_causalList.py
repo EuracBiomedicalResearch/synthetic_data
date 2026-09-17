@@ -232,7 +232,7 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Example:
-  python gwas_catalog_parser.py --input gwas_catalog.txt --output causal_variants.txt
+  python create_causalList.py --input gwas_catalog.txt --output causal_variants.txt
         """
     )
     

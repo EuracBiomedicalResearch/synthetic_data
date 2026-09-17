@@ -1,5 +1,11 @@
 # Synthetic data generation and evaluation
 
+**Note:** This repository is an extended version of the original HAPNEST
+workflow, including new functionality for synthetic genotype–phenotype
+data generation and evaluation, together with stability, compatibility,
+and reproducibility improvements. See [EXTENSIONS.md](EXTENSIONS.md)
+for a summary of the changes introduced in this fork.
+
 HAPNEST enables you to
 - Efficiently generate large-scale, diverse and realistic datasets for genotypes and phenotypes
 - Easily analyse data quality with an extensive workflow for evaluating synthetic data reliability and generalisability
